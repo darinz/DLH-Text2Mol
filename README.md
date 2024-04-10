@@ -18,6 +18,11 @@ conda env update -f code/requirements.yaml --prune
 ```
 
 
+## Data: *ChEBI-20*
+
+Data is located in the "data" directory. Files directly used in the dataloaders are "training.txt", "val.txt", and "test.txt". These include the CIDs (pubchem compound IDs), mol2vec embeddings, and ChEBI descriptions. See README within the data directory for more information.
+
+
 ## Python Code Description
 
 | Python File      | Description |
