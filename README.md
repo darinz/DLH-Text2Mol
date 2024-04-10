@@ -14,8 +14,25 @@ conda env create -f ./code/requirements.yaml
 conda remove --name text2mol --all
 
 # to update conda environment when some new libraries are added.
-conda env update -f environment.yaml --prune
+conda env update -f requirements.yaml --prune
 ```
+
+
+## Code Files Description
+
+| File      | Description |
+| ----------- | ----------- |
+| main.py      | Train Text2Mol.       |
+| main_parallel.py   | A lightly-tested parallel version.        |
+| ranker.py   | Rank output embeddings.        |
+| ensemble.py   | Rank ensemble of output embeddings.        |
+| test_example.py   | Runs a version of the model that you can query with arbitrary inputs for testing.        |
+| extract_embeddings.py   | Extract embeddings or rules from a specific checkpoint.        |
+| ranker_threshold.py   | Rank output embeddings and plot cosine score vs. ranking.        |
+| models.py   | The three model definitions: MLP, GCN, and Attention.        |
+| losses.py   | Losses used for training.        |
+| dataloaders.py   | Code for loading the data.        |
+
 
 ## Citation
 
