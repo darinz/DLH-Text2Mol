@@ -1,110 +1,148 @@
 # DLH-Text2Mol
 
-In this project we aim to replicate the paper [Text2Mol: Cross-Modal Molecular Retrieval with Natural Language Queries](https://aclanthology.org/2021.emnlp-main.47/) by Carl Edwards, ChengXiang Zhai, and Heng Ji. The original repository for the paper can be found at [Text2Mol Github Repo](https://github.com/cnedwards/text2mol).
+[![Python](https://img.shields.io/badge/Python-3.7-blue.svg)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-1.11.0-red.svg)](https://pytorch.org/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Paper](https://img.shields.io/badge/Paper-EMNLP%202021-orange.svg)](https://aclanthology.org/2021.emnlp-main.47/)
+[![arXiv](https://img.shields.io/badge/arXiv-2108.02713-b31b1b.svg)](https://arxiv.org/abs/2108.02713)
 
-## Video Presentation
+A PyTorch implementation of [Text2Mol: Cross-Modal Molecular Retrieval with Natural Language Queries](https://aclanthology.org/2021.emnlp-main.47/) by Carl Edwards, ChengXiang Zhai, and Heng Ji. This project replicates the original paper's methodology for retrieving molecular structures using natural language queries.
 
-Watch the video presentation on [YouTube](https://youtu.be/6A5zjoiE10Y).
+## Overview
 
-## Conda Environment Setup
+Text2Mol is a cross-modal retrieval system that bridges the gap between natural language descriptions and molecular structures. The model learns to map textual descriptions to molecular embeddings, enabling efficient retrieval of relevant molecules based on text queries.
 
-Use the first command to create a new independent environment for the project. Or use the other two commands to remove or update the Conda environment.
+## Features
 
-```shell
-# to create conda environment.
+- **Cross-modal Retrieval**: Map natural language queries to molecular structures
+- **Multiple Model Architectures**: MLP, GCN, and Attention-based models
+- **ChEBI-20 Dataset**: Comprehensive molecular dataset with textual descriptions
+- **Embedding Extraction**: Extract and analyze molecular embeddings
+- **Ranking System**: Evaluate retrieval performance with various metrics
+
+## Quick Start
+
+### Environment Setup
+
+Create a new conda environment for the project:
+
+```bash
+# Create conda environment
 conda env create -f code/requirements.yaml
 
-# to remove conda environment.
-conda remove --name text2mol --all
+# Activate environment
+conda activate text2mol
 
-# to update conda environment when some new libraries are added.
+# Update environment (if needed)
 conda env update -f code/requirements.yaml --prune
 ```
 
+### Training
 
-## Data: *ChEBI-20*
+Train the Text2Mol model:
 
-Data is located in the "data" directory. Files directly used in the dataloaders are "training.txt", "val.txt", and "test.txt". These include the CIDs (pubchem compound IDs), mol2vec embeddings, and ChEBI descriptions. See README within the data directory for more information.
-
-The data directory contain 6 files:
-
-(1,2,3) The mol2vec_ChEBI_20_X.txt files have lines in the following form:
-```
-CID	mol2vec embedding	Description
+```bash
+python code/main.py --data data --output_path test_output --model MLP --epochs 40 --batch_size 32
 ```
 
-(4) mol_graphs.zip contain {cid}.graph files. These are formatted first with the edgelist of the graph and then substructure tokens for each node.
-For example,
-```
-edgelist:
-0 1
-1 0
-1 2
-2 1
-1 3
-3 1
-```
-```
-idx to identifier:
-0 3537119515
-1 2059730245
-2 3537119515
-3 1248171218
+### Evaluation
+
+Rank embeddings and evaluate performance:
+
+```bash
+# Rank single model outputs
+python code/ranker.py test_output/embeddings --train --val --test
+
+# Rank ensemble of multiple models
+python code/ensemble.py test_output/embeddings GCN_outputs/embeddings --train --val --test
 ```
 
-(5) ChEBI_defintions_substructure_corpus.cp contains the molecule token "sentences". It is formatted:
-```
-cid: tokenid1 tokenid2 tokenid3 ... tokenidn
-```
+### Testing
 
-(6) token_embedding_dict.npy is a dictionary mapping molecule tokens to their embeddings. It can be loaded with the following code:
-```python
-import numpy as np
-token_embedding_dict = np.load("token_embedding_dict.npy", allow_pickle=True)[()]
+Run example queries with a trained model:
+
+```bash
+python code/test_example.py test_output/embeddings/ data/ test_output/CHECKPOINT.pt
 ```
 
-## Python Code Description
+## Dataset
 
-| Python File      | Description |
-| ----------- | ----------- |
-| main.py      | Train Text2Mol.       |
-| main_parallel.py   | A lightly-tested parallel version.        |
-| ranker.py   | Rank output embeddings.        |
-| ensemble.py   | Rank ensemble of output embeddings.        |
-| test_example.py   | Runs a version of the model that you can query with arbitrary inputs for testing.        |
-| extract_embeddings.py   | Extract embeddings or rules from a specific checkpoint.        |
-| ranker_threshold.py   | Rank output embeddings and plot cosine score vs. ranking.        |
-| models.py   | The three model definitions: MLP, GCN, and Attention.        |
-| losses.py   | Losses used for training.        |
-| dataloaders.py   | Code for loading the data.        |
+The project uses the **ChEBI-20** dataset located in the `data/` directory. The dataset includes:
 
+- **Training/Validation/Test splits**: `training.txt`, `val.txt`, `test.txt`
+- **Molecular graphs**: `mol_graphs.zip` containing graph representations
+- **Token embeddings**: `token_embedding_dict.npy` for molecular substructure tokens
+- **Corpus data**: `ChEBI_defintions_substructure_corpus.cp` with tokenized descriptions
 
-## Training, Embedding Extraction, Ranking, etc.:
+### Data Format
 
-To train the model:
+Each data file contains:
+- **CID**: PubChem Compound ID
+- **Mol2Vec embeddings**: Pre-computed molecular embeddings
+- **ChEBI descriptions**: Natural language descriptions of molecules
 
-> python code/main.py --data data --output_path test_output --model MLP --epochs 40 --batch_size 32
+## Model Architecture
 
-ranker.py can be used to rank embedding outpoints. ensemble.py ranks the ensemble of multiple embeddings.  
+The implementation includes three model variants:
 
-> python code/ranker.py test_output/embeddings --train --val --test
+| Model | Description |
+|-------|-------------|
+| **MLP** | Multi-layer perceptron for embedding projection |
+| **GCN** | Graph Convolutional Network for molecular representation |
+| **Attention** | Attention-based model for cross-modal learning |
 
-> python code/ensemble.py test_output/embeddings GCN_outputs/embeddings --train --val --test
+## Code Structure
 
-To run example queries given a model checkpoint for the MLP model:
+| File | Purpose |
+|------|---------|
+| `main.py` | Main training script |
+| `models.py` | Model architecture definitions |
+| `dataloaders.py` | Data loading and preprocessing |
+| `losses.py` | Loss function implementations |
+| `ranker.py` | Embedding ranking and evaluation |
+| `ensemble.py` | Ensemble model evaluation |
+| `extract_embeddings.py` | Embedding extraction utilities |
+| `test_example.py` | Interactive testing interface |
+| `ranker_threshold.py` | Threshold analysis and visualization |
 
-> python code/test_example.py test_output/embeddings/ data/ test_output/CHECKPOINT.pt
+## Usage Examples
 
-To get embeddings from a specific checkpoint:
+### Extract Embeddings
 
-> python code/extract_embeddings.py --data data --output_path embedding_output_dir --checkpoint test_output/CHECKPOINT.pt --model MLP --batch_size 32
+```bash
+python code/extract_embeddings.py \
+    --data data \
+    --output_path embedding_output_dir \
+    --checkpoint test_output/CHECKPOINT.pt \
+    --model MLP \
+    --batch_size 32
+```
 
-To plot cosine score vs ranking:
+### Analyze Threshold Performance
 
-> python code/ranker_threshold.py test_output/embeddings --train --val --test --output_file threshold_image.png
+```bash
+python code/ranker_threshold.py test_output/embeddings \
+    --train --val --test \
+    --output_file threshold_analysis.png
+```
 
+## Video Presentation
+
+Watch the project presentation: [YouTube Video](https://youtu.be/6A5zjoiE10Y)
+
+## Dependencies
+
+Key dependencies include:
+- **PyTorch 1.11.0**: Deep learning framework
+- **PyTorch Geometric**: Graph neural networks
+- **Transformers 4.15.0**: Pre-trained language models
+- **NumPy, Pandas**: Data manipulation
+- **Matplotlib**: Visualization
+- **Scikit-learn**: Machine learning utilities
 
 ## Citation
+
+If you use this implementation in your research, please cite the original paper:
 
 ```bibtex
 @inproceedings{edwards2021text2mol,
@@ -116,3 +154,13 @@ To plot cosine score vs ranking:
   url = {https://aclanthology.org/2021.emnlp-main.47/}
 }
 ```
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Original Text2Mol implementation: [Text2Mol GitHub Repository](https://github.com/cnedwards/text2mol)
+- ChEBI database for molecular data
+- PyTorch and PyTorch Geometric communities
